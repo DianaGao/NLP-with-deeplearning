@@ -1,0 +1,57 @@
+from __future__ import print_function, division
+from builtins import range
+
+import numpy as mp
+import pandas as pd
+import matplotlib.pyplot as plt
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequnece import pad_sequences
+from keras.layers import Dense, Input, GlobalMaxPoolingID
+from keras.layers import Conv1D, MaxPoolingId, Embedding
+from keras.models import Model
+from sklearn.metrics import roc_auc_score
+
+#Word Vectors is refer to Standford pre-trained glove vectors
+
+#Step one: Tokenizing (String split)
+#convert a phrase into a list of strings which each element is called a token
+
+#Step two: Pad sequences (rectangular output)
+#By adding 0s to seuqneces that shorter than the other, it ensure all sequneces share the same length as the longest one.
+
+#Configuration
+MAX_SEQUENCE_LENGTH = 100 # Find the maximum length of a comment and set it up here
+MAX_VOCAB_SIZE = 20000 # Rule of thumb: native English speaker knows apprximately 20,000 words
+EMBEDDING_DIM = 100 # Embedding dimension
+VALIDATION_SPLIT = 0.2 #Testc data/Total dataset
+BATCH_SIZE = 128 #Number of data in one btach
+EPOCHS = 10 #Numebr of times passing dataset into neural network
+
+print('Loading word vectors...')
+word2vec = {}
+with open(os.path.join('../larg_files/glove.6B/glove.6B.%sd.txt' % EMBEDDING_DIM)) as f:
+    #file format is like: word vec[0] vec[1] vec[2] ...
+    for line in f:
+        values = line.split()
+        word = value[0]
+        vec = np.asarray(values[1:], dtype = 'float32')
+        word2vec[word] = vec
+print('Found %s word vectors.' % len(word2vec))
+
+print('Loading in comments...')
+
+train = pd.read_csv("train.cav")
+sentences = train["comment_text"].fillna("DUMMY_VALUE").values
+possible_labels = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
+targets = train[possible_labels].values
+
+tokenizer = Tokenizer(num_words = MAX_VOCAB_SIZE)
+tokenizer.fit_on_texts(sentences)
+sequences = tokenizer.texts_to_sequences(sentences)
+
+print("max sequence length:", max(len(s) for s in sequences))
+print("min sequence length:", min(len(s) for s in sequences))
+s = sorted(len(s) for s in sequences)
+print("median sequence length:", s[len(s) // 2])
+
+print("max word index:", max(max(seq) for seq in sequences if len(seq) > 0))
